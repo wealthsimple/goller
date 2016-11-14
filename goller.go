@@ -39,16 +39,34 @@ func (s *sqsQueue) Poll() {
 		panic("A message handler needs to be registered first!")
 	}
 
-	//s.logger.Printf("Polling on %s", s.client.Endpoint)
+	s.logger.Printf("Polling on %s", s.queueUrl)
 
 	params := &sqs.ReceiveMessageInput{
 		QueueUrl:        aws.String(s.queueUrl),
 		WaitTimeSeconds: aws.Int64(20),
+		VisibilityTimeout: aws.Int64(10),
+		MaxNumberOfMessages: aws.Int64(10),
 	}
 
 	result, err := s.client.ReceiveMessage(params)
 	checkErr(err, s.logger)
 
+	fmt.Printf("%+v\n", result)
 
-	//s.handler.Handle(result)
+	messages := result.Messages
+	for _, v := range messages {
+		receipt := v.ReceiptHandle
+		s.handler.Handle(v.Body)
+		s.deleteMessage(receipt)
+	}
+}
+
+func (s *sqsQueue)deleteMessage(receipt *string) {
+	params := &sqs.DeleteMessageInput{
+		QueueUrl: aws.String(s.queueUrl),
+		ReceiptHandle: receipt,
+	}
+	_, err := s.client.DeleteMessage(params)
+
+	checkErr(err, s.logger)
 }
