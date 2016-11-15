@@ -1,27 +1,27 @@
 package goller
 
 type Configuration struct {
-	waitTimeSeconds     int64
-	visibilityTimeout   int64
-	maxNumberOfMessages int64
-	region              string
-	queueUrl            string
-	accessKeyId         string
-	secretKey           string
+	WaitTimeSeconds     int64
+	VisibilityTimeout   int64
+	MaxNumberOfMessages int64
+	Region              string
+	QueueUrl            string
+	AccessKeyId         string
+	SecretKey           string
 }
 
 var defaultConfig = Configuration{
-	waitTimeSeconds:     20,
-	visibilityTimeout:   10,
-	maxNumberOfMessages: 10,
-	region:              "us-east-1",
+	WaitTimeSeconds:     20,
+	VisibilityTimeout:   10,
+	MaxNumberOfMessages: 10,
+	Region:              "us-east-1",
 }
 
 func mergeWithDefaultConfig(c *Configuration) {
-	if c.region == "" {
-		c.region = defaultConfig.region
+	if c.Region == "" {
+		c.Region = defaultConfig.Region
 	}
-	if c.maxNumberOfMessages == 0 {
-		c.maxNumberOfMessages = defaultConfig.maxNumberOfMessages
+	if c.MaxNumberOfMessages == 0 {
+		c.MaxNumberOfMessages = defaultConfig.MaxNumberOfMessages
 	}
 }
