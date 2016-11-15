@@ -7,8 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"reflect"
-	"encoding/json"
 )
 
 //The internal structure that contains config and session information for a particular poller
@@ -17,16 +15,15 @@ type sqsQueue struct {
 	logger  *log.Logger
 	config  Configuration
 	handler Handler
-	responseObject reflect.Type
 }
 
 //Returns a new sqs poller for a given configuration and handler
-func NewSqsPoller(c Configuration, h Handler, responseObject reflect.Type, l *log.Logger) *sqsQueue {
+func NewSqsPoller(c Configuration, h Handler, l *log.Logger) *sqsQueue {
 	mergeWithDefaultConfig(&c)
 
 	sess := getSession(&c, l)
 
-	return &sqsQueue{client: sqs.New(sess), config: c, handler: h, responseObject: responseObject, logger: l}
+	return &sqsQueue{client: sqs.New(sess), config: c, handler: h, logger: l}
 }
 
 //Long polls the sqs queue (provided that the waitTimeSeconds is set in the config and > 0)
@@ -50,9 +47,7 @@ func (s *sqsQueue) Poll() {
 	messages := result.Messages
 	for _, v := range messages {
 		receipt := v.ReceiptHandle
-		obj := reflect.New(s.responseObject).Interface().(Handler)
-		json.Unmarshal([]byte(*v.Body), &obj)
-		s.handler.Handle(obj)
+		s.handler.Handle(v.Body)
 		s.deleteMessage(receipt)
 	}
 }
