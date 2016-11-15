@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 )
 
 type sqsQueue struct {
@@ -18,8 +19,7 @@ type sqsQueue struct {
 func NewSqsPoller(c Configuration, h Handler, l *log.Logger) *sqsQueue {
 	mergeWithDefaultConfig(&c)
 
-	sess, err := session.NewSession(&aws.Config{Region: aws.String(c.region)})
-	checkErr(err, l)
+	sess := getSession(&c, l)
 
 	return &sqsQueue{client: sqs.New(sess), config: c, handler: h, logger: l}
 }
@@ -57,4 +57,20 @@ func (s *sqsQueue) deleteMessage(receipt *string) {
 	_, err := s.client.DeleteMessage(params)
 
 	checkErr(err, s.logger)
+}
+
+func getSession(c *Configuration, l *log.Logger) *session.Session {
+	var sess *session.Session
+	var err error
+
+	if c.accessKeyId != "" && c.secretKey != "" {
+		sess, err = session.NewSession(&aws.Config{
+			Region: aws.String(c.region),
+			Credentials: credentials.NewStaticCredentials(c.accessKeyId, c.secretKey, ""),
+		})
+	} else {
+		sess, err = session.NewSession(&aws.Config{Region: aws.String(c.region)})
+	}
+	checkErr(err, l)
+	return sess
 }

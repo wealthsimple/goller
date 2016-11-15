@@ -6,6 +6,8 @@ type Configuration struct {
 	maxNumberOfMessages int64
 	region string
 	queueUrl string
+	accessKeyId string
+	secretKey string
 }
 
 var defaultConfig = Configuration{
