@@ -4,16 +4,16 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 )
 
 type sqsQueue struct {
-	client   *sqs.SQS
-	logger   *log.Logger
-	config	 Configuration
-	handler  Handler
+	client  *sqs.SQS
+	logger  *log.Logger
+	config  Configuration
+	handler Handler
 }
 
 func NewSqsPoller(c Configuration, h Handler, l *log.Logger) *sqsQueue {
@@ -32,9 +32,9 @@ func (s *sqsQueue) Poll() {
 	s.logger.Printf("Long polling on %s", s.config.queueUrl)
 
 	params := &sqs.ReceiveMessageInput{
-		QueueUrl:        aws.String(s.config.queueUrl),
-		WaitTimeSeconds: aws.Int64(s.config.waitTimeSeconds),
-		VisibilityTimeout: aws.Int64(s.config.visibilityTimeout),
+		QueueUrl:            aws.String(s.config.queueUrl),
+		WaitTimeSeconds:     aws.Int64(s.config.waitTimeSeconds),
+		VisibilityTimeout:   aws.Int64(s.config.visibilityTimeout),
 		MaxNumberOfMessages: aws.Int64(s.config.maxNumberOfMessages),
 	}
 
@@ -51,7 +51,7 @@ func (s *sqsQueue) Poll() {
 
 func (s *sqsQueue) deleteMessage(receipt *string) {
 	params := &sqs.DeleteMessageInput{
-		QueueUrl: aws.String(s.config.queueUrl),
+		QueueUrl:      aws.String(s.config.queueUrl),
 		ReceiptHandle: receipt,
 	}
 	_, err := s.client.DeleteMessage(params)
@@ -65,7 +65,7 @@ func getSession(c *Configuration, l *log.Logger) *session.Session {
 
 	if c.accessKeyId != "" && c.secretKey != "" {
 		sess, err = session.NewSession(&aws.Config{
-			Region: aws.String(c.region),
+			Region:      aws.String(c.region),
 			Credentials: credentials.NewStaticCredentials(c.accessKeyId, c.secretKey, ""),
 		})
 	} else {
