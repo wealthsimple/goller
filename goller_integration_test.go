@@ -28,7 +28,7 @@ func TestGoller_NewSqsPoller(t *testing.T) {
 	config := Configuration{
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
-		QueueUrl:          "https://sqs.us-east-1.amazonaws.com/526316940316/vishals-test-queue",
+		QueueUrl:          /* Provide your queue url here */ "PROVIDE_YOUR_URL.com",
 	}
 	res := NewSqsPoller(config, ts, l)
 	res.Poll()
