@@ -7,3 +7,19 @@ type Configuration struct {
 	region string
 	queueUrl string
 }
+
+var defaultConfig = Configuration{
+	waitTimeSeconds: 20,
+	visibilityTimeout: 10,
+	maxNumberOfMessages: 10,
+	region: "us-east-1",
+}
+
+func mergeWithDefaultConfig(c *Configuration) {
+	if c.region == "" {
+		c.region = defaultConfig.region
+	}
+	if c.maxNumberOfMessages == 0 {
+		c.maxNumberOfMessages = defaultConfig.maxNumberOfMessages
+	}
+}

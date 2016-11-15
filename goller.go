@@ -15,15 +15,8 @@ type sqsQueue struct {
 	handler  Handler
 }
 
-var defaultConfig = Configuration{
-	waitTimeSeconds: 20,
-	visibilityTimeout: 10,
-	maxNumberOfMessages: 10,
-	region: "us-east-1",
-}
-
 func NewSqsPoller(c Configuration, h Handler, l *log.Logger) *sqsQueue {
-	mergeWithDefaults(&c)
+	mergeWithDefaultConfig(&c)
 
 	sess, err := session.NewSession(&aws.Config{Region: aws.String(c.region)})
 	checkErr(err, l)
@@ -64,13 +57,4 @@ func (s *sqsQueue) deleteMessage(receipt *string) {
 	_, err := s.client.DeleteMessage(params)
 
 	checkErr(err, s.logger)
-}
-
-func mergeWithDefaults(c *Configuration) {
-	if c.region == "" {
-		c.region = defaultConfig.region
-	}
-	if c.maxNumberOfMessages == 0 {
-		c.maxNumberOfMessages = defaultConfig.maxNumberOfMessages
-	}
 }
