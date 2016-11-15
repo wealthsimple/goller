@@ -2,11 +2,17 @@ package goller
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"os"
 	"testing"
 )
+
+//READ ME FIRST:
+//
+//This is an integration test, as such it requires a real AWS queue url
+//and the appropriate credentials to access that queue. Goller gets its aws credentials
+//from the Provider chain. As a last resort, you can provide the AWS access key id and
+//secret key to the config object; however, this is not recommended in production
 
 type testStruct struct {
 	Handler
@@ -22,9 +28,8 @@ func TestGoller_NewSqsPoller(t *testing.T) {
 	config := Configuration{
 		waitTimeSeconds:   20,
 		visibilityTimeout: 10,
-		queueUrl:/*YOUR QUEUE URL HERE */ "test_url.com",
+		queueUrl:/*YOUR QUEUE URL HERE */ "supply_your_url.com",
 	}
 	res := NewSqsPoller(config, ts, l)
-	assert.NotEmpty(t, res, "it should not be empty")
 	res.Poll()
 }
