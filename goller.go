@@ -1,37 +1,34 @@
 package goller
 
 import (
-	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"log"
 )
 
 type sqsQueue struct {
 	client   *sqs.SQS
 	logger   *log.Logger
+	config	 Configuration
 	handler  Handler
-	queueUrl string
 }
 
-func NewSqsPollerWithRegion(queueUrl string, region string, l *log.Logger) *sqsQueue {
-	sess, err := session.NewSession(&aws.Config{Region: aws.String(region)})
+var defaultConfig = Configuration{
+	waitTimeSeconds: 20,
+	visibilityTimeout: 10,
+	maxNumberOfMessages: 10,
+	region: "us-east-1",
+}
+
+func NewSqsPoller(c Configuration, h Handler, l *log.Logger) *sqsQueue {
+	mergeWithDefaults(&c)
+
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(c.region)})
 	checkErr(err, l)
 
-	return &sqsQueue{client: sqs.New(sess), logger: l, queueUrl: queueUrl}
-}
-
-func NewSqsPoller(queueName string, l *log.Logger) *sqsQueue {
-	return NewSqsPollerWithRegion(queueName, "us-east-1", l)
-}
-
-func (s *sqsQueue) RegisterHandler(h Handler) {
-	if s.handler == nil {
-		s.handler = h
-	} else {
-		panic("There is already a message handler registed to this class!")
-	}
+	return &sqsQueue{client: sqs.New(sess), config: c, handler: h, logger: l}
 }
 
 func (s *sqsQueue) Poll() {
@@ -39,19 +36,17 @@ func (s *sqsQueue) Poll() {
 		panic("A message handler needs to be registered first!")
 	}
 
-	s.logger.Printf("Polling on %s", s.queueUrl)
+	s.logger.Printf("Long polling on %s", s.config.queueUrl)
 
 	params := &sqs.ReceiveMessageInput{
-		QueueUrl:        aws.String(s.queueUrl),
-		WaitTimeSeconds: aws.Int64(20),
-		VisibilityTimeout: aws.Int64(10),
-		MaxNumberOfMessages: aws.Int64(10),
+		QueueUrl:        aws.String(s.config.queueUrl),
+		WaitTimeSeconds: aws.Int64(s.config.waitTimeSeconds),
+		VisibilityTimeout: aws.Int64(s.config.visibilityTimeout),
+		MaxNumberOfMessages: aws.Int64(s.config.maxNumberOfMessages),
 	}
 
 	result, err := s.client.ReceiveMessage(params)
 	checkErr(err, s.logger)
-
-	fmt.Printf("%+v\n", result)
 
 	messages := result.Messages
 	for _, v := range messages {
@@ -61,12 +56,21 @@ func (s *sqsQueue) Poll() {
 	}
 }
 
-func (s *sqsQueue)deleteMessage(receipt *string) {
+func (s *sqsQueue) deleteMessage(receipt *string) {
 	params := &sqs.DeleteMessageInput{
-		QueueUrl: aws.String(s.queueUrl),
+		QueueUrl: aws.String(s.config.queueUrl),
 		ReceiptHandle: receipt,
 	}
 	_, err := s.client.DeleteMessage(params)
 
 	checkErr(err, s.logger)
+}
+
+func mergeWithDefaults(c *Configuration) {
+	if c.region == "" {
+		c.region = defaultConfig.region
+	}
+	if c.maxNumberOfMessages == 0 {
+		c.maxNumberOfMessages = defaultConfig.maxNumberOfMessages
+	}
 }
