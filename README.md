@@ -7,7 +7,7 @@ go get github.com/wealthsimple/goller
 ```
 
 ## Usage
-```
+```go
 import (
 	"fmt"
 	"github.com/wealthsimple/goller"
