@@ -7,23 +7,29 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"reflect"
+	"encoding/json"
 )
 
+//The internal structure that contains config and session information for a particular poller
 type sqsQueue struct {
 	client  *sqs.SQS
 	logger  *log.Logger
 	config  Configuration
 	handler Handler
+	responseObject reflect.Type
 }
 
-func NewSqsPoller(c Configuration, h Handler, l *log.Logger) *sqsQueue {
+//Returns a new sqs poller for a given configuration and handler
+func NewSqsPoller(c Configuration, h Handler, responseObject reflect.Type, l *log.Logger) *sqsQueue {
 	mergeWithDefaultConfig(&c)
 
 	sess := getSession(&c, l)
 
-	return &sqsQueue{client: sqs.New(sess), config: c, handler: h, logger: l}
+	return &sqsQueue{client: sqs.New(sess), config: c, handler: h, responseObject: responseObject, logger: l}
 }
 
+//Long polls the sqs queue (provided that the waitTimeSeconds is set in the config and > 0)
 func (s *sqsQueue) Poll() {
 	if s.handler == nil {
 		panic("A message handler needs to be registered first!")
@@ -44,11 +50,14 @@ func (s *sqsQueue) Poll() {
 	messages := result.Messages
 	for _, v := range messages {
 		receipt := v.ReceiptHandle
-		s.handler.Handle(v.Body)
+		obj := reflect.New(s.responseObject).Interface().(Handler)
+		json.Unmarshal([]byte(*v.Body), &obj)
+		s.handler.Handle(obj)
 		s.deleteMessage(receipt)
 	}
 }
 
+//Deletes the message after long polling
 func (s *sqsQueue) deleteMessage(receipt *string) {
 	params := &sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(s.config.queueUrl),
@@ -59,6 +68,7 @@ func (s *sqsQueue) deleteMessage(receipt *string) {
 	checkErr(err, s.logger)
 }
 
+//Gets the session based on the configuration: checks if credentials are set, otherwise, uses aws provider chain
 func getSession(c *Configuration, l *log.Logger) *session.Session {
 	var sess *session.Session
 	var err error
