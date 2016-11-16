@@ -16,7 +16,7 @@ type sqsQueue struct {
 	handler Handler
 }
 
-//Returns a new sqs poller for a given configuration and handler
+//NewSqsPoller returns a new sqs poller for a given configuration and handler
 func NewSqsPoller(c Configuration, h Handler, l *log.Logger) *sqsQueue {
 	mergeWithDefaultConfig(&c)
 
@@ -25,7 +25,7 @@ func NewSqsPoller(c Configuration, h Handler, l *log.Logger) *sqsQueue {
 	return &sqsQueue{client: c.provider.getQueue(sess), config: c, handler: h, logger: l}
 }
 
-//Long polls the sqs queue (provided that the WaitTimeSeonds is set in the config and > 0)
+//Poll long polls the sqs queue (provided that the WaitTimeSeonds is set in the config and > 0)
 func (s *sqsQueue) Poll() {
 	if s.handler == nil {
 		panic("A message handler needs to be registered first!")

@@ -1,5 +1,6 @@
 package goller
 
+//Configuration is a struct containing options to construct a poller with
 type Configuration struct {
 	WaitTimeSeconds     int64
 	VisibilityTimeout   int64

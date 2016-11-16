@@ -1,25 +1,25 @@
 package goller
 
 import (
-	"testing"
+	"fmt"
 	"log"
 	"os"
-	"fmt"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/session"
-	 "github.com/stretchr/testify/assert"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/stretchr/testify/assert"
 )
 
 type dummyProvider struct {
 	awsProvider
-	calledGetSession bool
-	calledGetWithCreds bool
-	calledGetQueue bool
+	calledGetSession       bool
+	calledGetWithCreds     bool
+	calledGetQueue         bool
 	calledReceivedMessages bool
-	calledDelete bool
-	output *sqs.ReceiveMessageOutput
-	sess *session.Session
+	calledDelete           bool
+	output                 *sqs.ReceiveMessageOutput
+	sess                   *session.Session
 }
 
 func (d *dummyProvider) getSession(region string) (*session.Session, error) {
@@ -32,7 +32,7 @@ func (d *dummyProvider) getSessionWithCredentials(region string, accessKey strin
 	return d.sess, nil
 }
 
-func (d *dummyProvider) getQueue(*session.Session) (*sqs.SQS) {
+func (d *dummyProvider) getQueue(*session.Session) *sqs.SQS {
 	d.calledGetQueue = true
 	return nil
 }
@@ -42,7 +42,7 @@ func (d *dummyProvider) receiveMessages(params *sqs.ReceiveMessageInput, client 
 	return d.output, nil
 }
 
-func (d *dummyProvider) deleteMessage(params *sqs.DeleteMessageInput, client *sqs.SQS) (error) {
+func (d *dummyProvider) deleteMessage(params *sqs.DeleteMessageInput, client *sqs.SQS) error {
 	d.calledDelete = true
 	return nil
 }
@@ -57,7 +57,6 @@ func (d *dummyHandler) Handle(message *string) {
 	fmt.Printf("%+v\n", *message)
 }
 
-
 var l *log.Logger
 
 func init() {
@@ -71,7 +70,7 @@ func TestNewSqsPoller_WithoutCredentials(t *testing.T) {
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
 		QueueUrl:          "my_url.com",
-		provider:    	p,
+		provider:          p,
 	}
 
 	h := new(dummyHandler)
@@ -91,9 +90,9 @@ func TestNewSqsPoller_WithCredentials(t *testing.T) {
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
 		QueueUrl:          "my_url.com",
-		provider:    	p,
-		AccessKeyId: "akid",
-		SecretKey: "secretKey",
+		provider:          p,
+		AccessKeyId:       "akid",
+		SecretKey:         "secretKey",
 	}
 
 	h := new(dummyHandler)
@@ -113,16 +112,15 @@ func TestSqsQueue_Poll_WithoutHandler(t *testing.T) {
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
 		QueueUrl:          "my_url.com",
-		provider:    	p,
-		AccessKeyId: "akid",
-		SecretKey: "secretKey",
+		provider:          p,
+		AccessKeyId:       "akid",
+		SecretKey:         "secretKey",
 	}
 
 	assert.Panics(t, func() {
 		NewSqsPoller(config, nil, l).Poll()
 	}, "No handler should panic")
 }
-
 
 func TestSqsQueue_PollWithNoMessages(t *testing.T) {
 	p := &dummyProvider{output: new(sqs.ReceiveMessageOutput)}
@@ -131,9 +129,9 @@ func TestSqsQueue_PollWithNoMessages(t *testing.T) {
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
 		QueueUrl:          "my_url.com",
-		provider:    	p,
-		AccessKeyId: "akid",
-		SecretKey: "secretKey",
+		provider:          p,
+		AccessKeyId:       "akid",
+		SecretKey:         "secretKey",
 	}
 
 	h := new(dummyHandler)
@@ -152,7 +150,7 @@ func TestSqsQueue_Poll(t *testing.T) {
 	receiptBody := "myMessageBody"
 	messages[0] = &sqs.Message{
 		ReceiptHandle: &receiptHandle,
-		Body: &receiptBody,
+		Body:          &receiptBody,
 	}
 	output := &sqs.ReceiveMessageOutput{
 		Messages: messages,
@@ -164,9 +162,9 @@ func TestSqsQueue_Poll(t *testing.T) {
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
 		QueueUrl:          "my_url.com",
-		provider:    	p,
-		AccessKeyId: "akid",
-		SecretKey: "secretKey",
+		provider:          p,
+		AccessKeyId:       "akid",
+		SecretKey:         "secretKey",
 	}
 
 	h := new(dummyHandler)

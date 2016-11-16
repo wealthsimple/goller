@@ -10,9 +10,9 @@ import (
 type awsProvider interface {
 	getSession(region string) (*session.Session, error)
 	getSessionWithCredentials(region string, accessKey string, secretKey string) (*session.Session, error)
-	getQueue(*session.Session) (*sqs.SQS)
+	getQueue(*session.Session) *sqs.SQS
 	receiveMessages(*sqs.ReceiveMessageInput, *sqs.SQS) (*sqs.ReceiveMessageOutput, error)
-	deleteMessage(*sqs.DeleteMessageInput, *sqs.SQS) (error)
+	deleteMessage(*sqs.DeleteMessageInput, *sqs.SQS) error
 }
 
 type defaultProvider struct {
@@ -30,7 +30,7 @@ func (d *defaultProvider) getSessionWithCredentials(region string, accessKey str
 	})
 }
 
-func (d *defaultProvider) getQueue(sess *session.Session) (*sqs.SQS) {
+func (d *defaultProvider) getQueue(sess *session.Session) *sqs.SQS {
 	return sqs.New(sess)
 }
 
@@ -38,7 +38,7 @@ func (d *defaultProvider) receiveMessages(params *sqs.ReceiveMessageInput, clien
 	return client.ReceiveMessage(params)
 }
 
-func (d*defaultProvider) deleteMessage(params *sqs.DeleteMessageInput, client *sqs.SQS) (error) {
+func (d *defaultProvider) deleteMessage(params *sqs.DeleteMessageInput, client *sqs.SQS) error {
 	_, err := client.DeleteMessage(params)
 	return err
 }
