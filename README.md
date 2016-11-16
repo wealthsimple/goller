@@ -1,5 +1,5 @@
-# goller
-A Golang SQS poller
+# goller [![CircleCI](https://circleci.com/gh/wealthsimple/goller.svg?style=svg)](https://circleci.com/gh/wealthsimple/goller)
+A Golang AWS SQS long poller
 
 ## Installation
 ```
