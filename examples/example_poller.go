@@ -1,10 +1,11 @@
-package goller
+package main
 
 import (
 	"fmt"
 	"log"
 	"os"
-	"testing"
+
+	"github.com/wealthsimple/goller"
 )
 
 //READ ME FIRST:
@@ -15,21 +16,21 @@ import (
 //secret key to the config object; however, this is not recommended in production
 
 type testStruct struct {
-	Handler
+	goller.Handler
 }
 
 func (t testStruct) Handle(message *string) {
 	fmt.Printf("%+v\n", *message)
 }
 
-func TestGoller_NewSqsPoller(t *testing.T) {
+func main() {
 	l := log.New(os.Stdout, "goller: ", log.Lshortfile|log.LstdFlags)
 	ts := new(testStruct)
-	config := Configuration{
+	config := goller.Configuration{
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
 		QueueUrl:          /* Provide your queue url here */ "PROVIDE_YOUR_URL.com",
 	}
-	res := NewSqsPoller(config, ts, l)
+	res := goller.NewSqsPoller(config, ts, l)
 	res.Poll()
 }
