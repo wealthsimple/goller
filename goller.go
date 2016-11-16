@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
@@ -23,7 +22,7 @@ func NewSqsPoller(c Configuration, h Handler, l *log.Logger) *sqsQueue {
 
 	sess := getSession(&c, l)
 
-	return &sqsQueue{client: sqs.New(sess), config: c, handler: h, logger: l}
+	return &sqsQueue{client: c.provider.getQueue(sess), config: c, handler: h, logger: l}
 }
 
 //Long polls the sqs queue (provided that the WaitTimeSeonds is set in the config and > 0)
@@ -32,7 +31,7 @@ func (s *sqsQueue) Poll() {
 		panic("A message handler needs to be registered first!")
 	}
 
-	s.logger.Printf("Long polling on %s", s.config.QueueUrl)
+	s.logger.Printf("Long polling on %s\n", s.config.QueueUrl)
 
 	params := &sqs.ReceiveMessageInput{
 		QueueUrl:            aws.String(s.config.QueueUrl),
@@ -41,7 +40,7 @@ func (s *sqsQueue) Poll() {
 		MaxNumberOfMessages: aws.Int64(s.config.MaxNumberOfMessages),
 	}
 
-	result, err := s.client.ReceiveMessage(params)
+	result, err := s.config.provider.receiveMessages(params, s.client)
 	checkErr(err, s.logger)
 
 	messages := result.Messages
@@ -50,6 +49,8 @@ func (s *sqsQueue) Poll() {
 		s.handler.Handle(v.Body)
 		s.deleteMessage(receipt)
 	}
+
+	s.logger.Printf("Finished long polling after %d seconds", s.config.WaitTimeSeconds)
 }
 
 //Deletes the message after long polling
@@ -58,7 +59,7 @@ func (s *sqsQueue) deleteMessage(receipt *string) {
 		QueueUrl:      aws.String(s.config.QueueUrl),
 		ReceiptHandle: receipt,
 	}
-	_, err := s.client.DeleteMessage(params)
+	err := s.config.provider.deleteMessage(params, s.client)
 
 	checkErr(err, s.logger)
 }
@@ -69,13 +70,11 @@ func getSession(c *Configuration, l *log.Logger) *session.Session {
 	var err error
 
 	if c.AccessKeyId != "" && c.SecretKey != "" {
-		sess, err = session.NewSession(&aws.Config{
-			Region:      aws.String(c.Region),
-			Credentials: credentials.NewStaticCredentials(c.AccessKeyId, c.SecretKey, ""),
-		})
+		sess, err = c.provider.getSessionWithCredentials(c.Region, c.AccessKeyId, c.SecretKey)
 	} else {
-		sess, err = session.NewSession(&aws.Config{Region: aws.String(c.Region)})
+		sess, err = c.provider.getSession(c.Region)
 	}
+
 	checkErr(err, l)
 	return sess
 }
