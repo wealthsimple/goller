@@ -1,13 +1,13 @@
 package goller
 
-//Configuration is a struct containing options to construct a poller with
+// Configuration is a struct containing options to construct a poller with
 type Configuration struct {
 	WaitTimeSeconds     int64
 	VisibilityTimeout   int64
 	MaxNumberOfMessages int64
 	Region              string
-	QueueUrl            string
-	AccessKeyId         string
+	QueueURL            string
+	AccessKeyID         string
 	SecretKey           string
 	provider            awsProvider
 }

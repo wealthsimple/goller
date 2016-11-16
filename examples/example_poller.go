@@ -29,7 +29,7 @@ func main() {
 	config := goller.Configuration{
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
-		QueueUrl:          /* Provide your queue url here */ "PROVIDE_YOUR_URL.com",
+		QueueURL:/* Provide your queue url here */ "PROVIDE_YOUR_URL.com",
 	}
 	res := goller.NewSqsPoller(config, ts, l)
 	res.Poll()

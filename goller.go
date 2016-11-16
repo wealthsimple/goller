@@ -8,33 +8,33 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
-//The internal structure that contains config and session information for a particular poller
-type sqsQueue struct {
+// SqsQueue is the structure containing config and session information for a particular poller
+type SqsQueue struct {
 	client  *sqs.SQS
 	logger  *log.Logger
 	config  Configuration
 	handler Handler
 }
 
-//NewSqsPoller returns a new sqs poller for a given configuration and handler
-func NewSqsPoller(c Configuration, h Handler, l *log.Logger) *sqsQueue {
+// NewSqsPoller returns a new sqs poller for a given configuration and handler
+func NewSqsPoller(c Configuration, h Handler, l *log.Logger) *SqsQueue {
 	mergeWithDefaultConfig(&c)
 
 	sess := getSession(&c, l)
 
-	return &sqsQueue{client: c.provider.getQueue(sess), config: c, handler: h, logger: l}
+	return &SqsQueue{client: c.provider.getQueue(sess), config: c, handler: h, logger: l}
 }
 
-//Poll long polls the sqs queue (provided that the WaitTimeSeonds is set in the config and > 0)
-func (s *sqsQueue) Poll() {
+// Poll long polls the sqs queue (provided that the WaitTimeSeonds is set in the config and > 0)
+func (s *SqsQueue) Poll() {
 	if s.handler == nil {
 		panic("A message handler needs to be registered first!")
 	}
 
-	s.logger.Printf("Long polling on %s\n", s.config.QueueUrl)
+	s.logger.Printf("Long polling on %s\n", s.config.QueueURL)
 
 	params := &sqs.ReceiveMessageInput{
-		QueueUrl:            aws.String(s.config.QueueUrl),
+		QueueUrl:            aws.String(s.config.QueueURL),
 		WaitTimeSeconds:     aws.Int64(s.config.WaitTimeSeconds),
 		VisibilityTimeout:   aws.Int64(s.config.VisibilityTimeout),
 		MaxNumberOfMessages: aws.Int64(s.config.MaxNumberOfMessages),
@@ -53,10 +53,10 @@ func (s *sqsQueue) Poll() {
 	s.logger.Printf("Finished long polling after %d seconds", s.config.WaitTimeSeconds)
 }
 
-//Deletes the message after long polling
-func (s *sqsQueue) deleteMessage(receipt *string) {
+// Deletes the message after long polling
+func (s *SqsQueue) deleteMessage(receipt *string) {
 	params := &sqs.DeleteMessageInput{
-		QueueUrl:      aws.String(s.config.QueueUrl),
+		QueueUrl:      aws.String(s.config.QueueURL),
 		ReceiptHandle: receipt,
 	}
 	err := s.config.provider.deleteMessage(params, s.client)
@@ -64,13 +64,13 @@ func (s *sqsQueue) deleteMessage(receipt *string) {
 	checkErr(err, s.logger)
 }
 
-//Gets the session based on the configuration: checks if credentials are set, otherwise, uses aws provider chain
+// Gets the session based on the configuration: checks if credentials are set, otherwise, uses aws provider chain
 func getSession(c *Configuration, l *log.Logger) *session.Session {
 	var sess *session.Session
 	var err error
 
-	if c.AccessKeyId != "" && c.SecretKey != "" {
-		sess, err = c.provider.getSessionWithCredentials(c.Region, c.AccessKeyId, c.SecretKey)
+	if c.AccessKeyID != "" && c.SecretKey != "" {
+		sess, err = c.provider.getSessionWithCredentials(c.Region, c.AccessKeyID, c.SecretKey)
 	} else {
 		sess, err = c.provider.getSession(c.Region)
 	}

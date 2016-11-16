@@ -69,7 +69,7 @@ func TestNewSqsPoller_WithoutCredentials(t *testing.T) {
 	config := Configuration{
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
-		QueueUrl:          "my_url.com",
+		QueueURL:          "my_url.com",
 		provider:          p,
 	}
 
@@ -89,9 +89,9 @@ func TestNewSqsPoller_WithCredentials(t *testing.T) {
 	config := Configuration{
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
-		QueueUrl:          "my_url.com",
+		QueueURL:          "my_url.com",
 		provider:          p,
-		AccessKeyId:       "akid",
+		AccessKeyID:       "akid",
 		SecretKey:         "secretKey",
 	}
 
@@ -111,9 +111,9 @@ func TestSqsQueue_Poll_WithoutHandler(t *testing.T) {
 	config := Configuration{
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
-		QueueUrl:          "my_url.com",
+		QueueURL:          "my_url.com",
 		provider:          p,
-		AccessKeyId:       "akid",
+		AccessKeyID:       "akid",
 		SecretKey:         "secretKey",
 	}
 
@@ -128,9 +128,9 @@ func TestSqsQueue_PollWithNoMessages(t *testing.T) {
 	config := Configuration{
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
-		QueueUrl:          "my_url.com",
+		QueueURL:          "my_url.com",
 		provider:          p,
-		AccessKeyId:       "akid",
+		AccessKeyID:       "akid",
 		SecretKey:         "secretKey",
 	}
 
@@ -161,9 +161,9 @@ func TestSqsQueue_Poll(t *testing.T) {
 	config := Configuration{
 		WaitTimeSeconds:   20,
 		VisibilityTimeout: 10,
-		QueueUrl:          "my_url.com",
+		QueueURL:          "my_url.com",
 		provider:          p,
-		AccessKeyId:       "akid",
+		AccessKeyID:       "akid",
 		SecretKey:         "secretKey",
 	}
 
