@@ -8,6 +8,7 @@ type Configuration struct {
 	QueueUrl            string
 	AccessKeyId         string
 	SecretKey           string
+	provider            awsProvider
 }
 
 var defaultConfig = Configuration{
@@ -15,6 +16,7 @@ var defaultConfig = Configuration{
 	VisibilityTimeout:   10,
 	MaxNumberOfMessages: 10,
 	Region:              "us-east-1",
+	provider:            &defaultProvider{},
 }
 
 func mergeWithDefaultConfig(c *Configuration) {
@@ -23,5 +25,8 @@ func mergeWithDefaultConfig(c *Configuration) {
 	}
 	if c.MaxNumberOfMessages == 0 {
 		c.MaxNumberOfMessages = defaultConfig.MaxNumberOfMessages
+	}
+	if c.provider == nil {
+		c.provider = defaultConfig.provider
 	}
 }
