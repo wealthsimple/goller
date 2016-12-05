@@ -30,8 +30,8 @@ func main() {
 		VisibilityTimeout:   10,
 		MaxNumberOfMessages: 1,
 		Region:              "us-east-1",
-		QueueUrl:            os.Getenv("QUEUE_URL"),
-		AccessKeyId:         os.Getenv("AWS_ACCESS_KEY_ID"),
+		QueueURL:            os.Getenv("QUEUE_URL"),
+		AccessKeyID:         os.Getenv("AWS_ACCESS_KEY_ID"),
 		SecretKey:           os.Getenv("AWS_SECRET_KEY"),
 	}
 
